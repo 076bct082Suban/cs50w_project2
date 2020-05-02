@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+    <script type="text/template" id="channel-template">
+        {% raw -%}
+            {{#each channels}} 
+            <li>
+                <a data-channel="{{this}}" class="channel_head">{{this}}</a>
+            </li>
+            {{/each}}
+        {%- endraw %}
+    </script>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <script src="{{url_for('static', filename='script.js')}}"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+</head>
+<body>
+    <div id="user_info" class="form-group">
+        <h4>Opps! You don't seem to have a username</h4><br>
+        <form>
+            <label for="username">Enter a username</label><br>
+            <input type="text" id='username' class="form-control-sm">
+            <button id="username_submit">Submit</button> 
+        </form>
+    </div>
+    <div id="content">
+        <!-- <ul>
+            <li id="name"></li>
+             <li id='logout'> Logout</li> -->
+            <!-- <li><button id="logout">Logout</button></li>
+        </ul> -->
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">Shitty Discord clone</a>
+            <div class="navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                  <li class="nav-item active">
+                    <a class="nav-link" id="name">Username</a>
+                  </li>
+                  <li class="nav-item active">
+                    <a class="nav-link" id="logout">Logout</a>
+                  </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div id="wrapper">
+            
+            <div id="sidebar-wrapper" >
+                <button id="create-channel"> + Create Channel</button>
+                <div id="create-channel-item" style="display: none;">
+                    <form class="form-group">
+                        <input type="text" name="channel-name" id="new-channel-name" class="form-control"> 
+                    </form>
+                    <p id="new-channel-error-text"></p>
+                    <button id="conform-channel" >Conform</button>
+                </div>
+                <ul id="sidebar-channel" style="overflow-y: auto;">
+
+                </ul>
+
+            </div>
+
+            <div id="page-content-wrapper">
+                <div class="container-fluid">
+                    <button id="sidebar-button"> button </button>
+                    <p>
+                        somebody once told me the world was gonna roll me i ain't the sharpest tool in the shed
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
