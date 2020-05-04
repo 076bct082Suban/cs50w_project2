@@ -1,4 +1,7 @@
 const template_channels = Handlebars.compile(document.querySelector("#channel-template").innerHTML);
+const template_other_message = Handlebars.compile(document.querySelector('#other-message-template').innerHTML)
+const template_self_message = Handlebars.compile(document.querySelector('#self-message-template').innerHTML)
+
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#content").style.display = 'none';
     if(localStorage.getItem('username')){
@@ -49,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // Reloads the channels
                     load_channels();
+                    console.log(data.name)
+                    open_channel(data.name);
 
                 }else {
                     if(data.already_exist){
@@ -61,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             const data = new FormData();
             data.append("name", name);
-            console.log(data);
             request.send(data);
             return false;
         };
@@ -71,23 +75,103 @@ document.addEventListener("DOMContentLoaded", () => {
     load_channels();
 
 
+
+    if(!localStorage.getItem('last_channel')){
+        open_channel('welcome');    
+
+    }else {
+        // console.log(localStorage.getItem('last_channel'));
+        open_channel(localStorage.getItem('last_channel'));
+    }
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+    socket.on('connect', () => {
+
+        document.querySelector("#send-message").onclick = () => {
+            const message = document.querySelector("#message").value;
+            document.querySelector("#message").value = "";
+            const today  = new Date();
+            socket.emit('post message', {
+                'message': message, 
+                'sent_by': localStorage.getItem('username'),
+                'timestamp': today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds(),
+                'channel': localStorage.getItem('last_channel')
+            })
+            return false;   
+        }
+
+    });
+
+    socket.on('notify message', (data) => {
+        notify(data.channel_name);
+        if(data.channel_name == localStorage.getItem('last_channel')){
+            message = JSON.parse(data.message)
+
+            if(message.sent_by == localStorage.getItem('username')){
+                const content = template_self_message(message);
+                document.querySelector("#messages-list").innerHTML += content;
+
+            }else {
+                const content = template_other_message(message);
+                document.querySelector("#messages-list").innerHTML += content;
+            }
+
+        }
+    })
+
 });
+
+function notify(channel_name){
+    // TODO make like a notification in sidebar 
+    console.log(channel_name);
+}
 
 function open_channel(channel_name){
     const request = new XMLHttpRequest();
     request.open("POST", "/channel_info")
     request.onload = () => {
         // TODO
-        const response = JSON.parse(JSON.parse(request.responseText));
-        title = response.name;
+        // I have no clue why i have to do this twice.
+        // console.log(JSON.parse(request.responseText) === {});
+        // After getting an empty 
+        // if(Object.keys(JSON.parse(request.responseText)).length == 0){
+        //     console.log("Channel doesn't exist");
+        //     open_channel('welcome');
+        //     return
+        // }
+
+        const response = JSON.parse(request.responseText);
+        if(!response.success){
+            console.log('Channel doesn\'t exist');
+            open_channel('welcome');
+            return
+        }
+
+        const data = JSON.parse(response.data);
+
+        title = data.name;
         document.title = title;
-        history.pushState(response, title, title)
+        history.pushState(response, title, title);
+        localStorage.setItem('last_channel', title);
+
+        messages = data.messages
+        for(const message of messages){
+            // const msg = message.timestamp
+            // message.timestamp = msg.slice(11, 20);
+            if(message.sent_by == localStorage.getItem('username')){
+                const content = template_self_message(message);
+                document.querySelector("#messages-list").innerHTML += content;
+            }else {
+                const content = template_other_message(message);
+                document.querySelector("#messages-list").innerHTML += content;
+            }            
+
+        }
     }
 
     const data = new FormData();
     console.log(channel_name);
     data.append("channel", channel_name)
-    // console.log(data);
     request.send(data);
 }
 
@@ -97,7 +181,6 @@ function load_channels(){
     request.onload = () => {
         const response = JSON.parse(request.responseText);
 
-        console.log(response);
         if(!response.success){
             console.log("something went wrongg");
             return
@@ -110,7 +193,6 @@ function load_channels(){
         }
          
         const content = template_channels({'channels': channel_names});
-        console.log(content);
 
         document.querySelector("#sidebar-channel").innerHTML = content;
 
